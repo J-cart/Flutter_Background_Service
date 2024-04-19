@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_background_service/bg_service_util.dart';
+import 'package:testing_background_service/local_notification.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final service = FlutterBackgroundService();
-  await initializeService(service);
+  // final service = FlutterBackgroundService();
+  await LocalNotification.init();
+  // await initializeService(service);
   runApp(const MyApp());
 }
 
@@ -39,6 +41,17 @@ class _HomeViewState extends State<HomeView> {
   String text = "Stop Service";
   // final service = FlutterBackgroundService();
   // final service = NewFlutterBackgroundService.instance();
+
+  initService() async {
+    await initializeService(widget.service);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initService();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

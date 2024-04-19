@@ -8,34 +8,12 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:testing_background_service/local_notification.dart';
+import 'package:testing_background_service/main.dart';
+
+const int FOREGROUND_NOTIF_ID = 888;
 
 Future<void> initializeService(FlutterBackgroundService service) async {
-  /// OPTIONAL, using custom notification channel id
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'my_foreground', // id
-    'MY FOREGROUND SERVICE', // title
-    description:
-        'This channel is used for important notifications.', // description
-    importance: Importance.low, // importance must be at low or higher level
-  );
-
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  if (Platform.isIOS || Platform.isAndroid) {
-    await flutterLocalNotificationsPlugin.initialize(
-      const InitializationSettings(
-        iOS: DarwinInitializationSettings(),
-        android: AndroidInitializationSettings('ic_bg_service_small'),
-      ),
-    );
-  }
-
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
-
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       // this will be executed when app is in foreground or background in separated isolate
@@ -45,14 +23,14 @@ Future<void> initializeService(FlutterBackgroundService service) async {
       autoStart: true,
       isForegroundMode: true,
 
-      notificationChannelId: 'my_foreground',
+      notificationChannelId: LocalNotification.NOTIF_CHANNEL_ID,
       initialNotificationTitle: 'AWESOME SERVICE',
       initialNotificationContent: 'Initializing',
-      foregroundServiceNotificationId: 888,
+      foregroundServiceNotificationId: FOREGROUND_NOTIF_ID,
     ),
     iosConfiguration: IosConfiguration(
       // auto start service
-      autoStart: true,
+      // autoStart: true,
 
       // this will be executed when app is in foreground in separated isolate
       onForeground: onStart,
@@ -91,10 +69,6 @@ void onStart(ServiceInstance service) async {
   SharedPreferences preferences = await SharedPreferences.getInstance();
   await preferences.setString("hello", "world");
 
-  /// OPTIONAL when use custom notification
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
       service.setAsForegroundService();
@@ -108,9 +82,6 @@ void onStart(ServiceInstance service) async {
   service.on('stopService').listen((event) {
     service.stopSelf();
   });
-  service.on('update').listen((event) {
-    print("LORD_DRE: $event");
-  });
 
   // bring to foreground
   Timer.periodic(const Duration(seconds: 1), (timer) async {
@@ -118,8 +89,8 @@ void onStart(ServiceInstance service) async {
       if (await service.isForegroundService()) {
         /// OPTIONAL for use custom notification
         /// the notification id must be equals with AndroidConfiguration when you call configure() method.
-        flutterLocalNotificationsPlugin.show(
-          888,
+        LocalNotification.showSimpleNotification(
+          FOREGROUND_NOTIF_ID,
           'COOL SERVICE',
           'Awesome ${DateTime.now()}',
           const NotificationDetails(
@@ -132,11 +103,11 @@ void onStart(ServiceInstance service) async {
           ),
         );
 
-        // if you don't using custom notification, uncomment this
-        service.setForegroundNotificationInfo(
-          title: "My App Service",
-          content: "Updated at ${DateTime.now()}",
-        );
+        // if you don't use custom notification, uncomment this
+        // service.setForegroundNotificationInfo(
+        //   title: "My App Service",
+        //   content: "Updated at ${DateTime.now()}",
+        // );
       }
     }
 
