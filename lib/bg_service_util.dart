@@ -12,6 +12,7 @@ import 'package:testing_background_service/local_notification.dart';
 import 'package:testing_background_service/main.dart';
 
 const int FOREGROUND_NOTIF_ID = 888;
+int currentCount = 0;
 
 Future<void> initializeService(FlutterBackgroundService service) async {
   await service.configure(
@@ -20,7 +21,7 @@ Future<void> initializeService(FlutterBackgroundService service) async {
       onStart: onStart,
 
       // auto start service
-      autoStart: true,
+      autoStart: false,
       isForegroundMode: true,
 
       notificationChannelId: LocalNotification.NOTIF_CHANNEL_ID,
@@ -30,7 +31,7 @@ Future<void> initializeService(FlutterBackgroundService service) async {
     ),
     iosConfiguration: IosConfiguration(
       // auto start service
-      // autoStart: true,
+      autoStart: false,
 
       // this will be executed when app is in foreground in separated isolate
       onForeground: onStart,
@@ -92,7 +93,7 @@ void onStart(ServiceInstance service) async {
         LocalNotification.showSimpleNotification(
           FOREGROUND_NOTIF_ID,
           'COOL SERVICE',
-          'Awesome ${DateTime.now()}',
+          '$currentCount--Awesome ${DateTime.now()}',
           const NotificationDetails(
             android: AndroidNotificationDetails(
               'my_foreground',
@@ -126,12 +127,14 @@ void onStart(ServiceInstance service) async {
       final iosInfo = await deviceInfo.iosInfo;
       device = iosInfo.model;
     }
+    currentCount++;
 
     service.invoke(
       'update',
       {
         "current_date": DateTime.now().toIso8601String(),
         "device": device,
+        "counter": currentCount
       },
     );
   });

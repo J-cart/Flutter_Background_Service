@@ -38,7 +38,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  String text = "Stop Service";
+  String text = "start Service";
   // final service = FlutterBackgroundService();
   // final service = NewFlutterBackgroundService.instance();
 
@@ -71,11 +71,13 @@ class _HomeViewState extends State<HomeView> {
 
               final data = snapshot.data!;
               String? device = data["device"];
+              int? counter = data["counter"];
               DateTime? date = DateTime.tryParse(data["current_date"]);
               return Column(
                 children: [
                   Text(device ?? 'Unknown'),
                   Text(date.toString()),
+                  Text(counter.toString()),
                 ],
               );
             },
